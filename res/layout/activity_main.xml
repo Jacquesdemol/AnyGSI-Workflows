@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -139,7 +140,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GSI Образ (.img)"
+                android:text="GSI Image (.img)"
                 android:textColor="@color/m3_primary"
                 android:textSize="13sp"
                 android:fontFamily="sans-serif-medium" />
@@ -149,7 +150,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Выберите файл .img любого GSI (Android 17 / 16 / LineageOS) для запуска."
+                android:text="Select any GSI .img file (Android 17 / 16 / LineageOS) to launch."
                 android:textColor="@color/m3_text_secondary"
                 android:textSize="13sp" />
 
@@ -228,7 +229,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Резервное копирование и восстановление One UI: память (/data/media), рабочий стол, шторка QS и системные права."
+                android:text="Back up and restore One UI: storage (/data/media), home screen, QS panel, and system permissions."
                 android:textColor="@color/m3_text_secondary"
                 android:textSize="13sp" />
 
@@ -305,7 +306,7 @@
                 android:fontFamily="monospace"
                 android:padding="12dp"
                 android:scrollbars="vertical"
-                android:text="AnyGSI initialized.\n"
+                android:text="AnyGSI initialized.&#10;"
                 android:textColor="@color/m3_log_text"
                 android:textSize="11sp" />
         </LinearLayout>
