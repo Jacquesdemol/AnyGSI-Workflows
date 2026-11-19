@@ -202,7 +202,7 @@ public class MainActivity extends Activity {
                     tvRootStatus.setText("✓ Root: KernelSU Active (" + joinCommand(suCommandPrefix) + ")");
                     tvRootStatus.setTextColor(Color.parseColor("#A5D6A7"));
                 } else {
-                    tvRootStatus.setText("✗ Root: Доступ запрещен (требуется KernelSU)");
+                    tvRootStatus.setText("✗ Root: Access denied (KernelSU is required)");
                     tvRootStatus.setTextColor(Color.parseColor("#FFB4AB"));
                 }
             });
@@ -238,13 +238,13 @@ public class MainActivity extends Activity {
                         String name = (osVer != null && !osVer.trim().isEmpty())
                                 ? "LineageOS " + osVer.trim()
                                 : "GSI Android " + (release != null ? release.trim() : "17") + (dispId != null && !dispId.trim().isEmpty() ? " (" + dispId.trim() + ")" : "");
-                        tvOsStatus.setText("Текущее пространство: " + name);
+                        tvOsStatus.setText("Current userspace: " + name);
                         tvOsStatus.setTextColor(Color.parseColor("#78D9EC"));
                         if (tvHeaderSubtitle != null) {
-                            tvHeaderSubtitle.setText("AnyGSI • " + ((osVer != null && !osVer.trim().isEmpty()) ? "LineageOS" : "Гостевой GSI"));
+                            tvHeaderSubtitle.setText("AnyGSI • " + ((osVer != null && !osVer.trim().isEmpty()) ? "LineageOS" : "Guest GSI"));
                         }
                     } else {
-                        tvOsStatus.setText("Текущее пространство: Samsung One UI (Хост Android " + (release != null ? release.trim() : "17") + ")");
+                        tvOsStatus.setText("Current userspace: Samsung One UI (Host Android " + (release != null ? release.trim() : "17") + ")");
                         tvOsStatus.setTextColor(Color.parseColor("#FFD54F"));
                         if (tvHeaderSubtitle != null) {
                             tvHeaderSubtitle.setText("AnyGSI • One UI");
@@ -252,7 +252,7 @@ public class MainActivity extends Activity {
                     }
                 });
             } catch (Exception e) {
-                mainHandler.post(() -> tvOsStatus.setText("Текущее пространство: Ошибка сканирования"));
+                mainHandler.post(() -> tvOsStatus.setText("Current userspace: Scanning error"));
             }
 
             checkImageStatus();
@@ -273,19 +273,19 @@ public class MainActivity extends Activity {
                 mainHandler.post(() -> {
                     if (out != null && !out.contains("MISSING") && !out.trim().isEmpty()) {
                         String details = out.trim().replaceAll("\\s+", " ");
-                        tvImageStatus.setText("Образ GSI: Готов (" + details + ")");
+                        tvImageStatus.setText("GSI image: Ready (" + details + ")");
                         tvImageStatus.setTextColor(Color.parseColor("#A5D6A7"));
                         if (tvImageDesc != null) {
-                            tvImageDesc.setText("Файл system.raw установлен. Нажмите «Запустить GSI» для переключения.");
+                            tvImageDesc.setText("system.raw is installed. Tap “Launch GSI” to switch userspace.");
                         }
                         btnBootLineage.setEnabled(true);
                         btnBootLineage.setAlpha(1.0f);
                         btnDeleteImg.setEnabled(true);
                     } else {
-                        tvImageStatus.setText("Образ GSI: Не установлен (system.raw отсутствует)");
+                        tvImageStatus.setText("GSI image: Not installed (system.raw is missing)");
                         tvImageStatus.setTextColor(Color.parseColor("#FFB4AB"));
                         if (tvImageDesc != null) {
-                            tvImageDesc.setText("Нажмите «Выбрать (.img)» для выбора образа GSI.");
+                            tvImageDesc.setText("Tap “Select (.img)” to choose a GSI image.");
                         }
                         btnBootLineage.setEnabled(false);
                         btnBootLineage.setAlpha(0.5f);
@@ -293,7 +293,7 @@ public class MainActivity extends Activity {
                     }
                 });
             } catch (Exception e) {
-                mainHandler.post(() -> tvImageStatus.setText("Ошибка проверки: " + e.getMessage()));
+                mainHandler.post(() -> tvImageStatus.setText("Check Failed: " + e.getMessage()));
             }
         });
     }
@@ -325,7 +325,7 @@ public class MainActivity extends Activity {
                     target.setExecutable(true, false);
                     target.setReadable(true, false);
                 } catch (Exception e) {
-                    appendLog("Ошибка распаковки " + asset + ": " + e.getMessage());
+                    appendLog("Failed to extract " + asset + ": " + e.getMessage());
                 }
             }
             if (isRootGranted) {
@@ -344,13 +344,13 @@ public class MainActivity extends Activity {
                     runRootCmdDrained(syncCmd);
                 } catch (Exception ignored) {}
             }
-            appendLog("Компоненты AnyGSI проверены.");
+            appendLog("AnyGSI components verified.");
         });
     }
 
     private void selectGsiImage() {
         if (!isRootGranted) {
-            appendLog("ОШИБКА: Требуются root-права (KernelSU)!");
+            appendLog("ERROR: Root access (KernelSU) is required!");
             return;
         }
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -392,34 +392,34 @@ public class MainActivity extends Activity {
         final String displayName = queryDisplayName(uri);
         if (displayName == null || !displayName.toLowerCase().endsWith(".img")) {
             new AlertDialog.Builder(this)
-                .setTitle("Неверный формат файла")
-                .setMessage("Разрешено выбирать ТОЛЬКО файлы с расширением .img!\nВыбран: " + (displayName != null ? displayName : "неизвестно"))
+                .setTitle("Invalid file format")
+                .setMessage("ONLY files with the .img extension are allowed!\nSelected: " + (displayName != null ? displayName : "unknown"))
                 .setPositiveButton("OK", null)
                 .show();
-            appendLog("ОШИБКА: Разрешены только файлы .img! (" + displayName + ")");
+            appendLog("ERROR: Only .img files are allowed! (" + displayName + ")");
             return;
         }
 
         executor.execute(() -> {
-            setLogStatus("Импорт .img…");
+            setLogStatus("Importing .img…");
             mainHandler.post(() -> {
                 pbDownload.setVisibility(View.VISIBLE);
                 pbDownload.setIndeterminate(true);
                 tvDownloadProgress.setVisibility(View.VISIBLE);
-                tvDownloadProgress.setText("Копирование " + displayName + " в директорию...");
+                tvDownloadProgress.setText("Copying " + displayName + " to the directory...");
                 btnSelectImg.setEnabled(false);
             });
 
             try {
                 runRootCmdDrained("mkdir -p " + STAGE_DIR + " && chmod 777 " + STAGE_DIR);
-                appendLog("\n[GSI] Очистка старых данных контейнера...");
+                appendLog("\n[GSI] Cleaning old container data...");
                 runRootCmdDrained(wipeUserDataCmd());
                 runRootCmdDrained("touch " + STAGE_DIR + "/.custom_gsi");
 
                 File tempInCache = new File(getCacheDir(), "selected_gsi.img");
                 if (tempInCache.exists()) tempInCache.delete();
 
-                appendLog("[GSI] Копирование файла: " + displayName + "...");
+                appendLog("[GSI] Copying file: " + displayName + "...");
                 long copied = 0;
                 try (InputStream in = getContentResolver().openInputStream(uri);
                      OutputStream out = new FileOutputStream(tempInCache)) {
@@ -432,22 +432,22 @@ public class MainActivity extends Activity {
                     out.flush();
                 }
 
-                appendLog("✓ Файл скопирован (" + (copied / 1048576) + " МБ). Перемещение в " + SYSTEM_RAW + "...");
+                appendLog("✓ File copied (" + (copied / 1048576) + " MB). Moving to " + SYSTEM_RAW + "...");
                 runRootCmdDrained("mv -f " + tempInCache.getAbsolutePath() + " " + SYSTEM_RAW + " && chmod 644 " + SYSTEM_RAW);
 
                 mainHandler.post(() -> {
                     pbDownload.setVisibility(View.GONE);
-                    tvDownloadProgress.setText("Образ " + displayName + " успешно установлен!");
+                    tvDownloadProgress.setText("Image " + displayName + " installed successfully!");
                     btnSelectImg.setEnabled(true);
                 });
-                setLogStatus("Готово");
+                setLogStatus("Done");
                 checkImageStatus();
             } catch (Exception e) {
-                appendLog("Ошибка установки .img: " + e.getMessage());
-                setLogStatus("Ошибка");
+                appendLog("Error installing .img: " + e.getMessage());
+                setLogStatus("Error");
                 mainHandler.post(() -> {
                     pbDownload.setVisibility(View.GONE);
-                    tvDownloadProgress.setText("Ошибка: " + e.getMessage());
+                    tvDownloadProgress.setText("Error: " + e.getMessage());
                     btnSelectImg.setEnabled(true);
                 });
             }
@@ -481,17 +481,17 @@ public class MainActivity extends Activity {
 
     private void confirmDeleteLineage() {
         new AlertDialog.Builder(this)
-            .setTitle("Очистить директорию?")
-            .setMessage("Это действие остановит контейнер, отмонтирует loop-устройства и удалит system.raw и файлы контейнера из " + STAGE_DIR + ".")
-            .setPositiveButton("Очистить", (dialog, which) -> deleteLineage())
-            .setNegativeButton("Отмена", null)
+            .setTitle("Clear directory?")
+            .setMessage("This action will stop the container, unmount loop devices and delete system.raw and the container files from " + STAGE_DIR + ".")
+            .setPositiveButton("Clear", (dialog, which) -> deleteLineage())
+            .setNegativeButton("Cancel", null)
             .show();
     }
 
     private void deleteLineage() {
         executor.execute(() -> {
-            setLogStatus("Очистка…");
-            appendLog("\n[ОЧИСТКА] Остановка процессов контейнера и отмонтирование...");
+            setLogStatus("Cleaning…");
+            appendLog("\n[CLEANUP] Stopping container processes and unmounting...");
             try {
                 String cleanupCmd =
                     "pkill -9 -f 'ctl.stop zygote' 2>/dev/null || true; " +
@@ -510,7 +510,7 @@ public class MainActivity extends Activity {
                     LEGACY_STAGE_DIR + "/system.raw " + LEGACY_STAGE_DIR + "/*.img; " +
                     "rm -rf " + STAGE_DIR + "/data " + STAGE_DIR + "/rootfs " + LEGACY_STAGE_DIR + "/data " + LEGACY_STAGE_DIR + "/rootfs; " +
                     "mkdir -p " + STAGE_DIR + "/rootfs; " +
-                    "if [ -f " + SYSTEM_RAW + " ]; then echo 'ВНИМАНИЕ: system.raw еще занят!'; else echo 'Директория очищена, loop-устройства отмонтированы.'; fi";
+                    "if [ -f " + SYSTEM_RAW + " ]; then echo 'WARNING: system.raw is still in use!'; else echo 'Directory cleared, loop devices unmounted.'; fi";
 
                 Process p = buildRootProcessBuilder(cleanupCmd).redirectErrorStream(true).start();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -518,40 +518,40 @@ public class MainActivity extends Activity {
                 boolean stillPresent = false;
                 while ((line = reader.readLine()) != null) {
                     appendLog("  " + line);
-                    if (line.contains("ВНИМАНИЕ: system.raw еще занят")) {
+                    if (line.contains("WARNING: system.raw is still in use")) {
                         stillPresent = true;
                     }
                 }
                 p.waitFor();
                 if (stillPresent) {
-                    appendLog("✗ system.raw не удалось удалить (занят). Перезагрузите устройство и повторите.");
-                    setLogStatus("Ошибка");
+                    appendLog("✗ Failed to delete system.raw (in use). Reboot the device and try again.");
+                    setLogStatus("Error");
                 } else {
-                    appendLog("✓ Файлы успешно удалены, директория очищена!");
-                    setLogStatus("Готово");
+                    appendLog("✓ Files deleted successfully, directory cleared!");
+                    setLogStatus("Done");
                 }
                 checkImageStatus();
             } catch (Exception e) {
-                appendLog("Ошибка очистки: " + e.getMessage());
-                setLogStatus("Ошибка");
+                appendLog("Cleanup error: " + e.getMessage());
+                setLogStatus("Error");
             }
         });
     }
 
     private void bootLineage() {
         if (!isRootGranted) {
-            appendLog("ОШИБКА: Требуются root-права для запуска GSI!");
+            appendLog("ERROR: Root access is required to launch GSI!");
             return;
         }
-        appendLog("\n[СТАРТ] Подготовка к переключению на GSI...");
-        setLogStatus("Переключение…");
+        appendLog("\n[START] Preparing to switch to GSI...");
+        setLogStatus("Switching…");
         executor.execute(() -> {
             try {
                 // 1. Verify system.raw exists
                 int checkRaw = runRootCmdDrained("[ -s " + SYSTEM_RAW + " ] || [ -s " + LEGACY_STAGE_DIR + "/system.raw ]");
                 if (checkRaw != 0) {
-                    appendLog("ОШИБКА: Файл " + SYSTEM_RAW + " не найден или пуст! Сначала выберите образ через «Выбрать (.img)».");
-                    setLogStatus("Ошибка");
+                    appendLog("ERROR: File " + SYSTEM_RAW + " not found or empty! First select an image via “Select (.img)”.");
+                    setLogStatus("Error");
                     return;
                 }
                 runRootCmdDrained("if [ ! -s " + SYSTEM_RAW + " ] && [ -s " + LEGACY_STAGE_DIR + "/system.raw ]; then ln -sf " + LEGACY_STAGE_DIR + "/system.raw " + SYSTEM_RAW + "; fi");
@@ -577,32 +577,32 @@ public class MainActivity extends Activity {
                              "  nohup /system/bin/sh $stageScript </dev/null >" + STAGE_DIR + "/takeover_app.log 2>&1 & " +
                              "fi";
                 buildRootProcessBuilder(cmd).start().waitFor();
-                appendLog("Демон переключения успешно запущен. Экран переключается на GSI...");
-                setLogStatus("Запущен");
+                appendLog("Switch daemon started successfully. Screen is switching to GSI...");
+                setLogStatus("Started");
             } catch (Exception e) {
-                appendLog("Ошибка запуска: " + e.getMessage());
-                setLogStatus("Ошибка");
+                appendLog("Launch error: " + e.getMessage());
+                setLogStatus("Error");
             }
         });
     }
 
     private void returnToOneUI() {
         if (!isRootGranted) {
-            appendLog("ОШИБКА: Требуются root-права для возврата в One UI!");
+            appendLog("ERROR: Root access is required to return to One UI!");
             return;
         }
-        appendLog("\n[СТАРТ] Восстановление One UI...");
-        setLogStatus("Восстановление…");
+        appendLog("\n[START] Restoring One UI...");
+        setLogStatus("Restoring…");
         executor.execute(() -> {
             try {
                 String stageScript = STAGE_DIR + "/return_to_oneui.sh";
                 String appScript = getFilesDir().getAbsolutePath() + "/return_to_oneui.sh";
                 String userLog = "/storage/emulated/0/AnyGSI_restore.log";
-                appendLog("[СТАРТ] Запуск возврата в One UI...");
+                appendLog("[START] Starting return to One UI...");
 
                 String runCmd = "if [ -f " + stageScript + " ]; then exec /system/bin/sh " + stageScript + " 2>&1 | tee " + userLog + "; " +
                                 "elif [ -f " + appScript + " ]; then exec /system/bin/sh " + appScript + " 2>&1 | tee " + userLog + "; " +
-                                "else echo 'return_to_oneui.sh не найден!'; fi";
+                                "else echo 'return_to_oneui.sh not found!'; fi";
 
                 ProcessBuilder pb = buildRootProcessBuilder(runCmd);
                 pb.redirectErrorStream(true);
@@ -616,27 +616,27 @@ public class MainActivity extends Activity {
                 int exitCode = p.waitFor();
 
                 if (exitCode != 0) {
-                    appendLog("ОШИБКА: return_to_oneui.sh завершился с кодом " + exitCode + "!");
-                    setLogStatus("Ошибка (" + exitCode + ")");
+                    appendLog("ERROR: return_to_oneui.sh exited with code " + exitCode + "!");
+                    setLogStatus("Error (" + exitCode + ")");
                 } else {
-                    appendLog("One UI успешно восстановлен!");
-                    setLogStatus("Готово");
+                    appendLog("One UI restored successfully!");
+                    setLogStatus("Done");
                 }
             } catch (Exception e) {
-                appendLog("Ошибка восстановления: " + e.getMessage());
-                setLogStatus("Ошибка");
+                appendLog("Restore error: " + e.getMessage());
+                setLogStatus("Error");
             }
         });
     }
 
     private void backupOneUI() {
         if (!isRootGranted) {
-            appendLog("ОШИБКА: Требуются root-права для создания бэкапа!");
+            appendLog("ERROR: Root access is required to create a backup!");
             return;
         }
         executor.execute(() -> {
-            setLogStatus("Бэкап…");
-            appendLog("\n[БЭКАП] Создание резервной копии рабочего стола One UI и шторки QS...");
+            setLogStatus("Backing up…");
+            appendLog("\n[BACKUP] Creating a backup of the One UI home screen and QS panel...");
             try {
                 String stageScript = STAGE_DIR + "/backup_host.sh";
                 String appScript = getFilesDir().getAbsolutePath() + "/backup_host.sh";
@@ -662,27 +662,27 @@ public class MainActivity extends Activity {
                 }
                 int exitCode = p.waitFor();
                 if (exitCode == 0) {
-                    appendLog("✓ Резервная копия рабочего стола и шторки QS успешно сохранена в " + BACKUP_DIR);
-                    setLogStatus("Готово");
+                    appendLog("✓ Home screen and QS panel backup saved successfully to " + BACKUP_DIR);
+                    setLogStatus("Done");
                 } else {
-                    appendLog("ОШИБКА бэкапа: код выхода " + exitCode);
-                    setLogStatus("Ошибка (" + exitCode + ")");
+                    appendLog("BACKUP ERROR: exit code " + exitCode);
+                    setLogStatus("Error (" + exitCode + ")");
                 }
             } catch (Exception e) {
-                appendLog("Ошибка бэкапа: " + e.getMessage());
-                setLogStatus("Ошибка");
+                appendLog("Backup error: " + e.getMessage());
+                setLogStatus("Error");
             }
         });
     }
 
     private void restoreOneUI() {
         if (!isRootGranted) {
-            appendLog("ОШИБКА: Требуются root-права для восстановления One UI!");
+            appendLog("ERROR: Root access is required to restore One UI!");
             return;
         }
         executor.execute(() -> {
-            setLogStatus("Восстановление…");
-            appendLog("\n[ВОССТАНОВЛЕНИЕ] Запуск комплексного восстановления One UI (restore_host.sh)...");
+            setLogStatus("Restoring…");
+            appendLog("\n[RESTORE] Starting full One UI restoration (restore_host.sh)...");
             try {
                 String stageScript = STAGE_DIR + "/restore_host.sh";
                 String appScript = getFilesDir().getAbsolutePath() + "/restore_host.sh";
@@ -690,7 +690,7 @@ public class MainActivity extends Activity {
 
                 String runCmd = "if [ -f " + stageScript + " ]; then exec /system/bin/sh " + stageScript + " 2>&1 | tee " + userLog + "; " +
                                 "elif [ -f " + appScript + " ]; then exec /system/bin/sh " + appScript + " 2>&1 | tee " + userLog + "; " +
-                                "else echo 'ОШИБКА: restore_host.sh не найден!'; fi";
+                                "else echo 'ERROR: restore_host.sh not found!'; fi";
 
                 ProcessBuilder pb = buildRootProcessBuilder(runCmd);
                 pb.redirectErrorStream(true);
@@ -703,15 +703,15 @@ public class MainActivity extends Activity {
                 }
                 int exitCode = p.waitFor();
                 if (exitCode == 0) {
-                    appendLog("✓ Среда One UI (память, рабочий стол, шторка QS) успешно восстановлена!");
-                    setLogStatus("Готово");
+                    appendLog("✓ One UI environment (storage, home screen, QS panel) restored successfully!");
+                    setLogStatus("Done");
                 } else {
-                    appendLog("ОШИБКА восстановления: код выхода " + exitCode);
-                    setLogStatus("Ошибка (" + exitCode + ")");
+                    appendLog("RESTORE ERROR: exit code " + exitCode);
+                    setLogStatus("Error (" + exitCode + ")");
                 }
             } catch (Exception e) {
-                appendLog("Ошибка восстановления: " + e.getMessage());
-                setLogStatus("Ошибка");
+                appendLog("Restore error: " + e.getMessage());
+                setLogStatus("Error");
             }
         });
     }
